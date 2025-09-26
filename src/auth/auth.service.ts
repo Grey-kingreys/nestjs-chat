@@ -1,33 +1,55 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { hash }  from 'bcrypt'
+import { LoginDto } from './dto/login.dto';
+import * as bcrypt from 'bcrypt'
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly prisma: PrismaService){}
+    constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService){}
+    async login(authBody: LoginDto){ 
+        const {email, password} = authBody
+        const user = await this.prisma.user.findUnique(
+            {
+                where: {email}
+            }
+        )
+        if(!user){
+            throw new Error('Utilisateur non trouver')
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password)
+        if(!isPasswordValid){
+            throw new Error('Mot de passe incorrect')
+        }
 
-    async login(authBody: any){
-        const {email, password} = authBody;
-        const hashedPassword = await this.hashpassword({password})
+        
+        const payload = {
+            id: user.id,
+            email: user.email
+        }
+        const token = this.jwtService.sign(payload)
+        return {
+            token
+        }        
+    }
+
+    async validateUser(userId: string) {
 
         const user = await this.prisma.user.findUnique({
             where: {
-                email: email
+                id: userId
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
             }
         })
+
         if(!user){
             throw new Error('Utilisateur non trouver')
         }
 
-        const isPassword = hashedPassword === user.password
-        if(!isPassword){
-            throw new Error('Mot de passe incorrect')
-        }
-
-    }
-
-    private async hashpassword({password}: {password: string}){
-        const hashedPassword = await hash(password, 10)
-        return hashedPassword
+        return user
     }
 }

@@ -1,9 +1,12 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class LoginDto {
+
+
     @IsEmail(
         {
-            blacklisted_chars: ' \'&"\(\)\[\]\{\}=$*!:;,<>?/§ ',
+            blacklisted_chars: ' \\\'&"\\(\\)\\[\\]\\{\\}=$*!:;,<>?/§ '
             
         },
 
@@ -16,7 +19,20 @@ export class LoginDto {
             message: 'Email est requis'
         }
     )
-    
+    @IsString(
+        {
+            message: 'Email doit etre une chaine de caractere'
+        }
+    )
+    @ApiProperty(
+        {
+            example: 'user@example.com',
+            description: 'Email de l utilisateur',
+            required: true,
+            type: 'string',
+            format: 'email',
+        }
+    )    
     email: string;
 
 
@@ -35,6 +51,17 @@ export class LoginDto {
             message: 'Mot de passe doit etre au moins 8 caracteres'
         }
     )
+    @ApiProperty(
+        {
+            example: 'user@2055US',
+            description: 'Mot de passe de l utilisateur',
+            required: true,
+            type: 'string',
+            format: 'email',
+            minLength: 8,
+            
+        }
+    )    
     password: string;
 
 
