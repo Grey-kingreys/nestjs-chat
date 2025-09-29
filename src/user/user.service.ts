@@ -41,45 +41,50 @@ export class UserService {
 
 
     async createUser(CreateUserDto: CreateUserDto){
-        const {name, email, password} = CreateUserDto;
+        try{        const {name, email, password} = CreateUserDto;
 
-        const UserExists = await this.prisma.user.findUnique({
-            where: {
-                email
-            }
-        })
+                const UserExists = await this.prisma.user.findUnique({
+                    where: {
+                        email
+                    }
+                })
 
-        if(UserExists){
-            throw new Error('L utilisateur existe deja')
-        }
+                if(UserExists){
+                    throw new Error('L utilisateur existe deja')
+                }
 
-        const hashedPassword = await bcrypt.hash(password, 10)
+                const hashedPassword = await bcrypt.hash(password, 10)
 
-        const user = await this.prisma.user.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword
-            },
+                const user = await this.prisma.user.create({
+                    data: {
+                        name,
+                        email,
+                        password: hashedPassword
+                    },
 
-            select: {
-                id: true,
-                name: true,
-                email: true,
-            }
-        })
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    }
+                })
 
-        const payload = {
-            id: user.id,
-            email: user.email
-        }
+                const payload = {
+                    id: user.id,
+                    email: user.email
+                }
 
-        const token = this.jwtService.sign(payload)
+                const token = this.jwtService.sign(payload)
 
-        return {
-            user,
-            token
-        }
+                return {
+                    user,
+                    token
+                }}
+                catch(error){
+                    return {error: true,
+                    message: error.message}
+
+                }
     }
 
     
