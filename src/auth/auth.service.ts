@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt'
@@ -15,11 +15,17 @@ export class AuthService {
             }
         )
         if(!user){
-            throw new Error('Utilisateur non trouver')
+            throw new UnauthorizedException({
+                error: true,
+                message: 'Email ou mot de passe incorrect'
+              });
         }
         const isPasswordValid = await bcrypt.compare(password, user.password)
         if(!isPasswordValid){
-            throw new Error('Mot de passe incorrect')
+            throw new UnauthorizedException({
+                error: true,
+                message: 'Email ou mot de passe incorrect'
+              });
         }
 
         
@@ -47,7 +53,10 @@ export class AuthService {
         })
 
         if(!user){
-            throw new Error('Utilisateur non trouver')
+            throw new UnauthorizedException({
+                error: true,
+                message: 'Utilisateur non trouver'
+              });
         }
 
         return user
