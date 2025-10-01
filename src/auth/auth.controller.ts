@@ -20,4 +20,9 @@ export class AuthController {
         return this.authService.validateUser(req.user.id)
     }
 
+    @Post('reset-password')
+    async resetUserPassword(@Body('email') email: string){
+        return this.authService.sendResetPasswordEmail({email})
+    }
+
 }

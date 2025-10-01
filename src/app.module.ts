@@ -5,10 +5,11 @@ import { UserService } from './user/user.service';
 import { PrismaService } from './prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
+import { MailerService } from 'src/mailer.service';
 
 @Module({
   imports: [UserModule, AuthModule],
   controllers: [UserController],
-  providers: [UserService, JwtStrategy , PrismaService],
+  providers: [UserService, JwtStrategy , PrismaService, MailerService],
 })
 export class AppModule {}

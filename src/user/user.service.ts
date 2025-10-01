@@ -3,11 +3,16 @@ import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
+import { MailerService } from 'src/mailer.service';
 
 
 @Injectable()
 export class UserService {
-    constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService) {}
+    constructor(
+        private readonly prisma: PrismaService, 
+        private readonly jwtService: JwtService,
+        private readonly mailerService: MailerService
+    ) {}
     async getUsers(){
         const users = await this.prisma.user.findMany(
             {
@@ -41,55 +46,45 @@ export class UserService {
 
 
     async createUser(CreateUserDto: CreateUserDto){
-        try{        const {name, email, password} = CreateUserDto;
-
-                const UserExists = await this.prisma.user.findUnique({
-                    where: {
-                        email
-                    }
-                })
-
-                if(UserExists){
-                    throw new Error('L utilisateur existe deja')
+        try{
+            const {name, email, password} = CreateUserDto;
+            const UserExists = await this.prisma.user.findUnique({
+                where: {email}
+            })
+            if(UserExists){throw new Error('L utilisateur existe deja')}
+            const hashedPassword = await bcrypt.hash(password, 10)
+            const user = await this.prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    password: hashedPassword
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
                 }
-
-                const hashedPassword = await bcrypt.hash(password, 10)
-
-                const user = await this.prisma.user.create({
-                    data: {
-                        name,
-                        email,
-                        password: hashedPassword
-                    },
-
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    }
-                })
-
-                const payload = {
-                    id: user.id,
-                    email: user.email
-                }
-
-                const token = this.jwtService.sign(payload)
-
-                return {
-                    user,
-                    token
-                }}
-                catch(error){
-                    return {error: true,
-                    message: error.message}
-
-                }
-    }
-
-    
-
-    
+            })
+            
+            await this.mailerService.sendCreatedAccountEmail({
+                recipient: email,
+                name: name,
+            })
+            const payload = {
+                id: user.id,
+                email: user.email
+            }
+            const token = this.jwtService.sign(payload)
+            return {
+                user,
+                token
+            }
+        }
+        catch(error){
+            return {error: true,
+            message: error.message}
+        }
+    }  
 }
 
 
