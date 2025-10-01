@@ -12,12 +12,14 @@ export class MailerService {
 
     async sendCreatedAccountEmail({recipient, name}: {recipient: string, name: string}) {
         try {
+
             const { data, error } = await this.mailer.emails.send({
                 from: 'Acme <onboarding@resend.dev>',
                 to: [recipient],
                 subject: 'Bienvenue sur NestJS chat',
                 html: `Bienvenue ${name} sur NestJS chat! Nous sommes <strong>heureux</strong> de vous avoir parmi nous!`,
             });
+            console.log({ data });
             
             if (error) {
                 console.error({ error });
